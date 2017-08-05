@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from deepgtav.messages import Start, Stop, Dataset, frame2numpy
+from deepgtav.messages import Start, Stop, Dataset, Scenario, frame2numpy
 from deepgtav.client import Client
 
 import argparse
 import time
-import cv2
+from skimage.io import imshow, imsave
 
 # Stores a dataset file with data coming from DeepGTAV
 if __name__ == '__main__':
@@ -22,22 +22,26 @@ if __name__ == '__main__':
     
     # Configures the information that we want DeepGTAV to generate and send to us. 
     # See deepgtav/messages.py to see what options are supported
-    dataset = Dataset(rate=30, frame=[320,160], throttle=True, brake=True, steering=True, vehicles=True, peds=True, reward=[15.0, 0.0], direction=None, speed=True, yawRate=True, location=True, time=True)
+    #dataset = Dataset(rate=30, frame=[320,160], throttle=True, brake=True, steering=True, vehicles=True, peds=True, reward=[15.0, 0.0], direction=None, speed=True, yawRate=True, location=True, time=True)
+    dataset = Dataset(rate=30, frame=[864,480], vehicles=True, peds=True, reward=[15.0, 0.0], direction=None, yawRate=True, location=True, time=True)
     # Send the Start request to DeepGTAV.
     scenario = Scenario(drivingMode=[786603,15.0]) # Driving style is set to normal, with a speed of 15.0 mph. All other scenario options are random.
     client.sendMessage(Start(dataset=dataset,scenario=scenario))
 
     # Start listening for messages coming from DeepGTAV. We do it for 80 hours
-    stoptime = time.time() + 80*3600
+    stoptime = time.time() + 60
     while time.time() < stoptime:
         try:
+            print("Starting data receiving")
+				        		
             # We receive a message as a Python dictionary
-            message = client.recvMessage()  
+            message = client.recvMessage()
             
             # The frame is a numpy array and can be displayed using OpenCV or similar       
-            # image = frame2numpy(message['frame'], (320,160))
-            # cv2.imshow('img',image)
-            # cv2.waitKey(-1)
+            image = frame2numpy(message['frame'], (864,480))
+            imshow('img',image)
+            imsave("test.png", image)
+            cv2.waitKey(-1)
         except KeyboardInterrupt:
             break
             
